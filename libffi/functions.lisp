@@ -96,7 +96,7 @@
             (if (typep (parse-type return-type) 'translatable-foreign-type)
                 ;; just return the pointer so that expand-from-foreign
                 ;; can apply translate-from-foreign
-                'result
+                `(translate-from-foreign result (parse-type ',return-type))
                 ;; built-in types won't be translated by
                 ;; expand-from-foreign, we have to do it here
                 `(mem-aref result ',return-type))))))
