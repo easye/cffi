@@ -501,7 +501,7 @@ Used with jna-4.0.0 or later.")
 
 (defvar *callbacks* (make-hash-table))
 
-(defmacro convert-args-to-lisp-values (arg-names &rest body)
+(defmacro convert-args-to-lisp-values (return-type arg-names &rest body)
   (let ((gensym-args (loop for name in arg-names
                            collect (format-symbol t '#:callback-arg-~a- name))))
     `(lambda (,@gensym-args)
@@ -510,7 +510,9 @@ Used with jna-4.0.0 or later.")
                    collecting `(,arg (if (typep ,gensym-arg 'java:java-object)
                                          (java:jobject-lisp-value ,gensym-arg)
                                          ,gensym-arg)))
-         ,body))))
+         ,(if (eq return-type :void)
+              body
+              `(lisp-value-to-java (progn ,body) ',return-type))))))
 
 (defmacro %defcallback (name return-type arg-names arg-types body
                         &key convention)
@@ -519,7 +521,7 @@ Used with jna-4.0.0 or later.")
          (jinterface-implementation
           (ensure-callback-interface ',return-type ',arg-types)
           "callback"
-          `,(convert-args-to-lisp-values ,arg-names ,@body))))
+          `,(convert-args-to-lisp-values ,return-type ,arg-names ,@body))))
 ;;          (lambda (,@arg-names) ,body))))
 
 (jvm::define-class-name +callback-object+ "com.sun.jna.Callback")
